@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import '../lib/cron';
 
 import './globals.css';
@@ -64,6 +65,8 @@ export default function RootLayout({
             <AuthProvider>{children}</AuthProvider>
           </SiteProvider>
         </ThemeProvider>
+        {/* Couple Nest 一起看：与「我们的小窝」App 同步播停/进度 */}
+        <Script src='/couple-nest-sync.js' strategy='afterInteractive' />
       </body>
     </html>
   );
