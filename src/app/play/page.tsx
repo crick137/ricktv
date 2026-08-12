@@ -191,6 +191,92 @@ function PlayPageClient() {
     videoTitleRef.current = videoTitle;
   }, [currentSource, currentId, detail, currentEpisodeIndex, videoTitle]);
 
+  /**
+   * Couple Nest 一起看：把 Vidstack 播放器挂到 window，供 couple-nest-sync.js 精确控制
+   * App WebView 通过 postMessage 下发 play/pause/seek
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const api = {
+      play: () => {
+        try {
+          const p = playerRef.current;
+          if (p?.play) return p.play();
+        } catch {
+          /* ignore */
+        }
+      },
+      pause: () => {
+        try {
+          const p = playerRef.current;
+          if (p?.pause) p.pause();
+        } catch {
+          /* ignore */
+        }
+      },
+      seek: (t: number) => {
+        try {
+          const p = playerRef.current;
+          if (!p) return;
+          const dur = p.duration || 0;
+          const target = Math.max(
+            0,
+            Math.min(Number(t) || 0, dur > 0 ? dur - 0.3 : Number(t) || 0)
+          );
+          p.currentTime = target;
+        } catch {
+          /* ignore */
+        }
+      },
+      getState: () => {
+        const p = playerRef.current;
+        if (!p) {
+          return { playing: false, currentTime: 0, duration: 0 };
+        }
+        return {
+          playing: !p.paused,
+          currentTime: p.currentTime || 0,
+          duration: p.duration || 0,
+        };
+      },
+    };
+
+    (window as any).__coupleNestPlayer = api;
+
+    // 通知桥：播放器 API 已就绪
+    try {
+      const msg = JSON.stringify({
+        source: 'couple-nest',
+        type: 'event',
+        event: 'ready',
+        hasPlayer: true,
+        player: 'coupleNestPlayer',
+        href: location.href,
+        title: document.title || videoTitleRef.current || '',
+        playing: false,
+        currentTime: 0,
+        duration: 0,
+      });
+      if ((window as any).ReactNativeWebView?.postMessage) {
+        (window as any).ReactNativeWebView.postMessage(msg);
+      }
+      window.parent?.postMessage(msg, '*');
+    } catch {
+      /* ignore */
+    }
+
+    return () => {
+      try {
+        if ((window as any).__coupleNestPlayer === api) {
+          delete (window as any).__coupleNestPlayer;
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [videoUrl, currentEpisodeIndex, currentSource, currentId]);
+
   // 解决 iOS Safari 100vh 不准确的问题：将视口高度写入 CSS 变量 --vh
   const setVH = useCallback(() => {
     if (typeof window !== 'undefined') {
