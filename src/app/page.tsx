@@ -263,7 +263,7 @@ function HomeClient() {
                   href='/discover'
                   className='rt-glass rounded-2xl px-4 py-3.5 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300 hover:border-teal-500/30 border border-transparent transition-colors'
                 >
-                  <span>纪录片 · 科幻 · 美剧 · Top250 等全部分类</span>
+                  <span>电影 · 剧集 · 短剧 · 纪录片…</span>
                   <span className='text-teal-600 dark:text-teal-300 font-medium'>
                     去发现 →
                   </span>
