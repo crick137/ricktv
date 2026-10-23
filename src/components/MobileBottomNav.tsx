@@ -1,6 +1,12 @@
 'use client';
 
-import { Film, Home, Search, Settings, Smartphone, Tv } from 'lucide-react';
+import {
+  Home,
+  LayoutGrid,
+  Search,
+  Settings,
+  Smartphone,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -11,41 +17,34 @@ const MobileBottomNav = ({ activePath }: { activePath?: string }) => {
   const navItems = [
     { icon: Home, label: '首页', href: '/' },
     { icon: Search, label: '搜索', href: '/search' },
-    {
-      icon: Film,
-      label: '电影',
-      href: '/douban?type=movie&tag=热门&title=热门电影',
-    },
-    {
-      icon: Tv,
-      label: '剧集',
-      href: '/douban?type=tv&tag=热门&title=热门剧集',
-    },
+    { icon: LayoutGrid, label: '发现', href: '/discover' },
     { icon: Smartphone, label: '短剧', href: '/duanju' },
     { icon: Settings, label: '设置', href: '/settings' },
   ] as const;
 
   const isActive = (href: string) => {
-    const typeMatch = href.match(/type=([^&]+)/)?.[1];
-    const tagMatch = href.match(/tag=([^&]+)/)?.[1];
+    const decoded = decodeURIComponent(currentActive);
 
-    if (typeMatch && tagMatch) {
-      const decodedActive = decodeURIComponent(currentActive);
+    if (href === '/discover') {
       return (
-        decodedActive.includes(`type=${typeMatch}`) &&
-        decodedActive.includes(`tag=${tagMatch}`)
+        decoded.startsWith('/discover') ||
+        decoded.startsWith('/douban')
       );
     }
 
     if (href === '/settings') {
-      return currentActive.startsWith('/settings');
+      return decoded.startsWith('/settings');
     }
 
     if (href === '/duanju') {
-      return currentActive.startsWith('/duanju');
+      return decoded.startsWith('/duanju');
     }
 
-    return decodeURIComponent(currentActive) === href;
+    if (href === '/search') {
+      return decoded.startsWith('/search');
+    }
+
+    return decoded === href || decoded.split('?')[0] === href;
   };
 
   return (
