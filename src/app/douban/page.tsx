@@ -1,9 +1,13 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
+import {
+  buildDiscoverApiUrl,
+  DOUBAN_KIND_TAGS,
+  type DoubanKind,
+} from '@/lib/navCategories';
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
 import DemoCard from '@/components/DemoCard';
@@ -21,43 +25,55 @@ function DoubanPageClient() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
 
+  const kindParam = searchParams.get('kind') as DoubanKind | null;
+  const countries = searchParams.get('countries') || '';
+  const genres = searchParams.get('genres') || '';
   const type = searchParams.get('type');
   const tag = searchParams.get('tag');
 
-  // 生成骨架屏数据
+  const useNew =
+    !!kindParam && Object.prototype.hasOwnProperty.call(DOUBAN_KIND_TAGS, kindParam);
+  const pageSize = useNew ? 20 : 25;
+
   const skeletonData = Array.from({ length: 25 }, (_, index) => index);
 
+  const buildUrl = (page: number) => {
+    if (useNew && kindParam) {
+      return buildDiscoverApiUrl({
+        kind: kindParam,
+        countries: countries || undefined,
+        genres: genres || undefined,
+        sort: 'T',
+        start: page * pageSize,
+      });
+    }
+    return `/api/douban?type=${type}&tag=${encodeURIComponent(
+      tag || ''
+    )}&pageSize=${pageSize}&pageStart=${page * pageSize}`;
+  };
+
   useEffect(() => {
-    if (!type || !tag) {
-      setError('缺少必要参数: type 或 tag');
+    if (!useNew && (!type || !tag)) {
+      setError('缺少必要参数');
       setLoading(false);
       return;
     }
 
-    // 重置页面状态
     setDoubanData([]);
     setCurrentPage(0);
     setHasMore(true);
     setError(null);
     setIsLoadingMore(false);
 
-    // 立即加载第一页数据
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/douban?type=${type}&tag=${tag}&pageSize=25&pageStart=0`
-        );
-
-        if (!response.ok) {
-          throw new Error('获取豆瓣数据失败');
-        }
-
+        const response = await fetch(buildUrl(0));
+        if (!response.ok) throw new Error('获取豆瓣数据失败');
         const data: DoubanResult = await response.json();
-
         if (data.code === 200) {
           setDoubanData(data.list);
-          setHasMore(data.list.length === 25);
+          setHasMore(data.list.length >= pageSize);
         } else {
           throw new Error(data.message || '获取数据失败');
         }
@@ -68,56 +84,40 @@ function DoubanPageClient() {
       }
     };
 
-    loadInitialData();
-  }, [type, tag]);
+    void loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kindParam, countries, genres, type, tag, useNew, pageSize]);
 
-  // 单独处理 currentPage 变化（加载更多）
   useEffect(() => {
-    if (currentPage > 0 && type && tag) {
-      const fetchMoreData = async () => {
-        try {
-          setIsLoadingMore(true);
+    if (currentPage <= 0) return;
+    if (!useNew && (!type || !tag)) return;
 
-          const response = await fetch(
-            `/api/douban?type=${type}&tag=${tag}&pageSize=25&pageStart=${
-              currentPage * 25
-            }`
-          );
-
-          if (!response.ok) {
-            throw new Error('获取豆瓣数据失败');
-          }
-
-          const data: DoubanResult = await response.json();
-
-          if (data.code === 200) {
-            setDoubanData((prev) => [...prev, ...data.list]);
-            setHasMore(data.list.length === 25);
-          } else {
-            throw new Error(data.message || '获取数据失败');
-          }
-        } catch (err) {
-          setError(err instanceof Error ? err.message : '获取豆瓣数据失败');
-        } finally {
-          setIsLoadingMore(false);
+    const fetchMoreData = async () => {
+      try {
+        setIsLoadingMore(true);
+        const response = await fetch(buildUrl(currentPage));
+        if (!response.ok) throw new Error('获取豆瓣数据失败');
+        const data: DoubanResult = await response.json();
+        if (data.code === 200) {
+          setDoubanData((prev) => [...prev, ...data.list]);
+          setHasMore(data.list.length >= pageSize);
+        } else {
+          throw new Error(data.message || '获取数据失败');
         }
-      };
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '获取豆瓣数据失败');
+      } finally {
+        setIsLoadingMore(false);
+      }
+    };
 
-      fetchMoreData();
-    }
-  }, [currentPage, type, tag]);
+    void fetchMoreData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
-  // 设置滚动监听
   useEffect(() => {
-    // 如果没有更多数据或正在加载，则不设置监听
-    if (!hasMore || isLoadingMore || loading) {
-      return;
-    }
-
-    // 确保 loadingRef 存在
-    if (!loadingRef.current) {
-      return;
-    }
+    if (!hasMore || isLoadingMore || loading) return;
+    if (!loadingRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -132,44 +132,53 @@ function DoubanPageClient() {
     observerRef.current = observer;
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
+      observerRef.current?.disconnect();
     };
   }, [hasMore, isLoadingMore, loading]);
 
   const getPageTitle = () => {
-    // 优先使用 URL 中的 title 参数
     const titleParam = searchParams.get('title');
-    if (titleParam) {
-      return titleParam;
+    if (titleParam) return titleParam;
+
+    if (useNew && kindParam) {
+      const parts = [DOUBAN_KIND_TAGS[kindParam]];
+      if (countries) parts.push(countries);
+      if (genres) parts.push(genres);
+      return parts.join(' · ');
     }
 
-    // 如果 title 参数不存在，根据 type 和 tag 拼接
     if (!type || !tag) return '豆瓣内容';
-
     const typeText = type === 'movie' ? '电影' : '电视剧';
     const tagText = tag === 'top250' ? 'Top250' : tag;
-
     return `${typeText} - ${tagText}`;
   };
 
   const getActivePath = () => {
     const params = new URLSearchParams();
-    if (type) params.set('type', type);
-    if (tag) params.set('tag', tag);
+    if (useNew && kindParam) {
+      params.set('kind', kindParam);
+      if (countries) params.set('countries', countries);
+      if (genres) params.set('genres', genres);
+    } else {
+      if (type) params.set('type', type);
+      if (tag) params.set('tag', tag);
+    }
     const titleParam = searchParams.get('title');
     if (titleParam) params.set('title', titleParam);
-
     const queryString = params.toString();
-    const activePath = `/douban${queryString ? `?${queryString}` : ''}`;
-    return activePath;
+    return `/douban${queryString ? `?${queryString}` : ''}`;
   };
+
+  const cardType =
+    useNew && kindParam
+      ? kindParam === 'tv' || kindParam === 'variety'
+        ? 'tv'
+        : 'movie'
+      : type || 'movie';
 
   return (
     <PageLayout activePath={getActivePath()}>
       <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'>
-        {/* 页面标题 */}
         <div className='mb-8'>
           <p className='rt-eyebrow mb-2'>douban</p>
           <h1 className='font-display text-[1.85rem] sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 mb-2'>
@@ -180,7 +189,6 @@ function DoubanPageClient() {
           </p>
         </div>
 
-        {/* 内容展示区域 */}
         <div className='max-w-[95%] mx-auto mt-8 overflow-visible'>
           {error ? (
             <div className='flex justify-center items-center h-40'>
@@ -200,7 +208,6 @@ function DoubanPageClient() {
             </div>
           ) : (
             <>
-              {/* 内容网格 */}
               <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8 sm:gap-y-20 sm:px-4'>
                 {loading
                   ? skeletonData.map((index) => (
@@ -216,13 +223,12 @@ function DoubanPageClient() {
                           title={item.title}
                           poster={item.poster}
                           rate={item.rate}
-                          type={type || 'movie'}
+                          type={cardType}
                         />
                       </div>
                     ))}
               </div>
 
-              {/* 加载更多指示器 */}
               {hasMore && !loading && (
                 <div
                   ref={(el) => {
@@ -243,7 +249,6 @@ function DoubanPageClient() {
                 </div>
               )}
 
-              {/* 没有更多数据提示 */}
               {!hasMore && doubanData.length > 0 && (
                 <div className='text-center text-slate-500 py-8 text-sm'>
                   已加载全部内容
