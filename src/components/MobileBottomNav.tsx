@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Home,
-  LayoutGrid,
-  Search,
-  Settings,
-  Smartphone,
-} from 'lucide-react';
+import { Home, LayoutGrid, Search, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -18,7 +12,6 @@ const MobileBottomNav = ({ activePath }: { activePath?: string }) => {
     { icon: Home, label: '首页', href: '/' },
     { icon: Search, label: '搜索', href: '/search' },
     { icon: LayoutGrid, label: '发现', href: '/discover' },
-    { icon: Smartphone, label: '短剧', href: '/duanju' },
     { icon: Settings, label: '设置', href: '/settings' },
   ] as const;
 
@@ -28,16 +21,13 @@ const MobileBottomNav = ({ activePath }: { activePath?: string }) => {
     if (href === '/discover') {
       return (
         decoded.startsWith('/discover') ||
-        decoded.startsWith('/douban')
+        decoded.startsWith('/douban') ||
+        decoded.startsWith('/duanju')
       );
     }
 
     if (href === '/settings') {
       return decoded.startsWith('/settings');
-    }
-
-    if (href === '/duanju') {
-      return decoded.startsWith('/duanju');
     }
 
     if (href === '/search') {
