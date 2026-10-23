@@ -32,7 +32,7 @@ import {
   type ComponentType,
 } from 'react';
 
-import { DISCOVER_SECTIONS } from '@/lib/navCategories';
+import { getSidebarGroups } from '@/lib/navCategories';
 
 import { useSite } from './SiteProvider';
 
@@ -257,30 +257,44 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               </Link>
             </nav>
 
-            {/* 发现分区：片种 → 题材 */}
+            {/* 发现分区快捷入口 */}
             <div className='flex-1 overflow-y-auto px-2 pt-4'>
               <div className='space-y-4'>
-                {DISCOVER_SECTIONS.map((section) => (
-                  <div key={section.id}>
+                {getSidebarGroups().map((group) => (
+                  <div key={group.label}>
                     {!isCollapsed && (
                       <p className='px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500'>
-                        {section.label}
+                        {group.label}
                       </p>
                     )}
                     <div className='space-y-0.5'>
-                      {section.items.map((item) => {
-                        const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
-                        const tagMatch = item.href.match(/tag=([^&]+)/)?.[1];
+                      {group.items.map((item) => {
                         const decodedActive = decodeURIComponent(active);
                         const decodedItemHref = decodeURIComponent(item.href);
+                        const itemQs = item.href.includes('?')
+                          ? item.href.slice(item.href.indexOf('?') + 1)
+                          : '';
+                        const itemParams = new URLSearchParams(itemQs);
+                        const activeQs = decodedActive.includes('?')
+                          ? decodedActive.slice(decodedActive.indexOf('?') + 1)
+                          : '';
+                        const activeParams = new URLSearchParams(activeQs);
+                        const sameKind =
+                          itemParams.get('kind') &&
+                          itemParams.get('kind') === activeParams.get('kind') &&
+                          (itemParams.get('countries') || '') ===
+                            (activeParams.get('countries') || '') &&
+                          (itemParams.get('genres') || '') ===
+                            (activeParams.get('genres') || '');
+                        const sameTag =
+                          itemParams.get('tag') &&
+                          itemParams.get('tag') === activeParams.get('tag');
                         const isActive =
                           decodedActive === decodedItemHref ||
-                          decodedActive.split('?')[0] === item.href ||
-                          (decodedActive.startsWith('/douban') &&
-                            typeMatch &&
-                            decodedActive.includes(`type=${typeMatch}`) &&
-                            tagMatch &&
-                            decodedActive.includes(`tag=${tagMatch}`));
+                          !!sameKind ||
+                          !!sameTag ||
+                          (item.href.startsWith('/duanju') &&
+                            decodedActive.startsWith('/duanju'));
                         const Icon = ICON_MAP[item.icon] || Film;
                         return (
                           <Link
@@ -290,7 +304,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                             data-active={isActive}
                             title={
                               isCollapsed
-                                ? `${section.label} · ${item.label}`
+                                ? `${group.label} · ${item.label}`
                                 : undefined
                             }
                             className={`group relative flex items-center rounded-xl px-2 py-2 pl-4 text-sm text-slate-700 hover:bg-slate-500/8 hover:text-teal-700 data-[active=true]:bg-teal-500/12 data-[active=true]:text-teal-700 transition-colors duration-200 min-h-[40px] dark:text-slate-300 dark:hover:text-teal-300 dark:data-[active=true]:bg-teal-500/10 dark:data-[active=true]:text-teal-300 ${
