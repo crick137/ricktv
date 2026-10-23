@@ -1647,6 +1647,8 @@ function PlayPageClient() {
     return player.subscribe(({ fullscreen }: any) => {
       setIsFullscreen(fullscreen);
       if (fullscreen) {
+        setPlayMoreOpen(false);
+        setCoupleOpen(false);
         lockLandscape();
       } else {
         unlock();
@@ -2008,7 +2010,7 @@ function PlayPageClient() {
           }
         />
       )}
-      {showSkipIntro && !upNextOpen && (
+      {showSkipIntro && !upNextOpen && !isFullscreen && (
         <div className='absolute top-20 right-4 z-[75] flex flex-col items-end gap-2'>
           <button
             type='button'
@@ -2027,7 +2029,7 @@ function PlayPageClient() {
           </button>
         </div>
       )}
-      {showMarkOutro && !showSkipIntro && !upNextOpen && (
+      {showMarkOutro && !showSkipIntro && !upNextOpen && !isFullscreen && (
         <div className='absolute top-20 right-4 z-[75] flex flex-col items-end gap-2'>
           <button
             type='button'
@@ -2040,7 +2042,7 @@ function PlayPageClient() {
           </button>
         </div>
       )}
-      {!upNextOpen && (
+      {!upNextOpen && !isFullscreen && (
         <div className='absolute top-20 left-4 z-[75] flex flex-col items-start gap-2 max-w-[min(90vw,16rem)]'>
           <button
             type='button'
@@ -2191,7 +2193,11 @@ function PlayPageClient() {
         introEndSec={introEndSec}
         outroStartSec={outroStartSec}
         duration={mediaDuration}
-        visible={!upNextOpen && (introEndSec > 5 || !!outroStartSec)}
+        visible={
+          !isFullscreen &&
+          !upNextOpen &&
+          (introEndSec > 5 || !!outroStartSec)
+        }
       />
       {/* 双击左右跳 · 长按 2×（不挡中间控件） */}
       {!upNextOpen && !!videoUrl && (
@@ -2380,15 +2386,17 @@ function PlayPageClient() {
             }
           }}
         />
-        <button
-          type='button'
-          onClick={() => setCoupleOpen((v) => !v)}
-          className='absolute bottom-24 right-4 z-[84] rounded-full border border-teal-400/40 bg-slate-950/70 backdrop-blur-md px-3 py-2 text-xs text-teal-200 hover:bg-teal-500 hover:text-slate-950 transition-colors shadow-lg flex items-center gap-1.5'
-          title='Couple Nest 一起看'
-        >
-          <Users className='h-3.5 w-3.5' />
-          一起看
-        </button>
+        {!isFullscreen && (
+          <button
+            type='button'
+            onClick={() => setCoupleOpen((v) => !v)}
+            className='absolute bottom-24 right-4 z-[84] rounded-full border border-teal-400/40 bg-slate-950/70 backdrop-blur-md px-3 py-2 text-xs text-teal-200 hover:bg-teal-500 hover:text-slate-950 transition-colors shadow-lg flex items-center gap-1.5'
+            title='一起看'
+          >
+            <Users className='h-3.5 w-3.5' />
+            一起看
+          </button>
+        )}
         <DefaultVideoLayout
           icons={defaultLayoutIcons}
           slots={{
