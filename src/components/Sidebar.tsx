@@ -32,7 +32,7 @@ import {
   type ComponentType,
 } from 'react';
 
-import { DOUBAN_CATEGORIES } from '@/lib/navCategories';
+import { DISCOVER_SECTIONS } from '@/lib/navCategories';
 
 import { useSite } from './SiteProvider';
 
@@ -163,20 +163,8 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     isCollapsed,
   };
 
-  const menuItems = DOUBAN_CATEGORIES.map((c) => ({
-    icon: ICON_MAP[c.icon] || Film,
-    label: c.label,
-    href: c.href,
-  }));
-
   const { siteName } = useSite();
-  if (siteName !== 'ricktv' && siteName !== 'ricktv1') {
-    menuItems.push({
-      icon: Github,
-      label: 'ricktv',
-      href: 'https://github.com/crick137/ricktv',
-    });
-  }
+  const showGithub = siteName !== 'ricktv' && siteName !== 'ricktv1';
 
   return (
     <SidebarContext.Provider value={contextValue}>
@@ -269,44 +257,75 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               </Link>
             </nav>
 
-            {/* 发现分区菜单 */}
+            {/* 发现分区：片种 → 题材 */}
             <div className='flex-1 overflow-y-auto px-2 pt-4'>
-              <div className='space-y-1'>
-                {menuItems.map((item) => {
-                  const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
-                  const tagMatch = item.href.match(/tag=([^&]+)/)?.[1];
-
-                  const decodedActive = decodeURIComponent(active);
-                  const decodedItemHref = decodeURIComponent(item.href);
-
-                  const isActive =
-                    decodedActive === decodedItemHref ||
-                    (decodedActive.startsWith('/douban') &&
-                      decodedActive.includes(`type=${typeMatch}`) &&
-                      tagMatch &&
-                      decodedActive.includes(`tag=${tagMatch}`));
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setActive(item.href)}
-                      data-active={isActive}
-                      className={`group relative flex items-center rounded-xl px-2 py-2 pl-4 text-sm text-slate-700 hover:bg-slate-500/8 hover:text-teal-700 data-[active=true]:bg-teal-500/12 data-[active=true]:text-teal-700 transition-colors duration-200 min-h-[40px] dark:text-slate-300 dark:hover:text-teal-300 dark:data-[active=true]:bg-teal-500/10 dark:data-[active=true]:text-teal-300 ${
-                        isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                      } gap-3 justify-start`}
-                    >
-                      <div className='w-4 h-4 flex items-center justify-center'>
-                        <Icon className='h-4 w-4 text-gray-500 group-hover:text-teal-500 data-[active=true]:text-teal-600 dark:text-gray-400 dark:group-hover:text-teal-400 dark:data-[active=true]:text-teal-400' />
-                      </div>
-                      {!isCollapsed && (
-                        <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
-                          {item.label}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
+              <div className='space-y-4'>
+                {DISCOVER_SECTIONS.map((section) => (
+                  <div key={section.id}>
+                    {!isCollapsed && (
+                      <p className='px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500'>
+                        {section.label}
+                      </p>
+                    )}
+                    <div className='space-y-0.5'>
+                      {section.items.map((item) => {
+                        const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
+                        const tagMatch = item.href.match(/tag=([^&]+)/)?.[1];
+                        const decodedActive = decodeURIComponent(active);
+                        const decodedItemHref = decodeURIComponent(item.href);
+                        const isActive =
+                          decodedActive === decodedItemHref ||
+                          decodedActive.split('?')[0] === item.href ||
+                          (decodedActive.startsWith('/douban') &&
+                            typeMatch &&
+                            decodedActive.includes(`type=${typeMatch}`) &&
+                            tagMatch &&
+                            decodedActive.includes(`tag=${tagMatch}`));
+                        const Icon = ICON_MAP[item.icon] || Film;
+                        return (
+                          <Link
+                            key={item.href + item.label}
+                            href={item.href}
+                            onClick={() => setActive(item.href)}
+                            data-active={isActive}
+                            title={
+                              isCollapsed
+                                ? `${section.label} · ${item.label}`
+                                : undefined
+                            }
+                            className={`group relative flex items-center rounded-xl px-2 py-2 pl-4 text-sm text-slate-700 hover:bg-slate-500/8 hover:text-teal-700 data-[active=true]:bg-teal-500/12 data-[active=true]:text-teal-700 transition-colors duration-200 min-h-[40px] dark:text-slate-300 dark:hover:text-teal-300 dark:data-[active=true]:bg-teal-500/10 dark:data-[active=true]:text-teal-300 ${
+                              isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
+                            } gap-3 justify-start`}
+                          >
+                            <div className='w-4 h-4 flex items-center justify-center'>
+                              <Icon className='h-4 w-4 text-gray-500 group-hover:text-teal-500 data-[active=true]:text-teal-600 dark:text-gray-400 dark:group-hover:text-teal-400 dark:data-[active=true]:text-teal-400' />
+                            </div>
+                            {!isCollapsed && (
+                              <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
+                                {item.label}
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {showGithub && (
+                  <Link
+                    href='https://github.com/crick137/ricktv'
+                    className={`group relative flex items-center rounded-xl px-2 py-2 pl-4 text-sm text-slate-700 hover:bg-slate-500/8 hover:text-teal-700 transition-colors duration-200 min-h-[40px] dark:text-slate-300 dark:hover:text-teal-300 ${
+                      isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
+                    } gap-3 justify-start`}
+                  >
+                    <div className='w-4 h-4 flex items-center justify-center'>
+                      <Github className='h-4 w-4 text-gray-500 group-hover:text-teal-500 dark:text-gray-400 dark:group-hover:text-teal-400' />
+                    </div>
+                    {!isCollapsed && (
+                      <span className='whitespace-nowrap'>ricktv</span>
+                    )}
+                  </Link>
+                )}
               </div>
             </div>
           </div>
