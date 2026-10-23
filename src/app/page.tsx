@@ -257,53 +257,17 @@ function HomeClient() {
                 </ScrollableRow>
               </section>
 
-              <section className='mb-8 animate-slide-up'>
-                <SectionHeader title='更多发现' />
-                <div className='rt-glass rounded-2xl px-4 py-3 sm:px-5 sm:py-4'>
-                  <nav className='flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-slate-600 dark:text-slate-300'>
-                    {[
-                      {
-                        label: '短剧',
-                        href: '/duanju',
-                      },
-                      {
-                        label: '纪录片',
-                        href: '/douban?type=movie&tag=纪录片&title=纪录片',
-                      },
-                      {
-                        label: '欧美',
-                        href: '/douban?type=movie&tag=欧美&title=欧美电影',
-                      },
-                      {
-                        label: '英剧',
-                        href: '/douban?type=tv&tag=英剧&title=英剧',
-                      },
-                      {
-                        label: '科幻',
-                        href: '/douban?type=movie&tag=科幻&title=科幻',
-                      },
-                      {
-                        label: '悬疑',
-                        href: '/douban?type=movie&tag=悬疑&title=悬疑',
-                      },
-                    ].map((x, i) => (
-                      <span key={x.href} className='inline-flex items-center'>
-                        {i > 0 && (
-                          <span
-                            className='mx-2 h-3 w-px bg-slate-300/70 dark:bg-slate-600/70'
-                            aria-hidden
-                          />
-                        )}
-                        <a
-                          href={x.href}
-                          className='rounded-md px-1.5 py-0.5 font-medium tracking-wide hover:text-teal-600 dark:hover:text-teal-300 transition-colors'
-                        >
-                          {x.label}
-                        </a>
-                      </span>
-                    ))}
-                  </nav>
-                </div>
+              <section className='mb-8 animate-slide-up md:hidden'>
+                <SectionHeader title='更多发现' href='/discover' />
+                <a
+                  href='/discover'
+                  className='rt-glass rounded-2xl px-4 py-3.5 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300 hover:border-teal-500/30 border border-transparent transition-colors'
+                >
+                  <span>纪录片 · 科幻 · 美剧 · Top250 等全部分类</span>
+                  <span className='text-teal-600 dark:text-teal-300 font-medium'>
+                    去发现 →
+                  </span>
+                </a>
               </section>
             </>
           )}
