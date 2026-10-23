@@ -251,6 +251,19 @@ function PlayPageClient() {
       : true
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
+  /** 文档级全屏 / 手机横屏时也要藏自定义浮层（一起看、片头提示等） */
+  const [isDocFullscreen, setIsDocFullscreen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const hideChromeOverlays =
+    isFullscreen ||
+    isDocFullscreen ||
+    (isMobileViewport && !isPortrait);
+
+  useEffect(() => {
+    if (!hideChromeOverlays) return;
+    setPlayMoreOpen(false);
+    setCoupleOpen(false);
+  }, [hideChromeOverlays]);
 
   // 用于记录是否需要在播放器 ready 后跳转到指定进度
   const resumeTimeRef = useRef<number | null>(null);
@@ -1616,6 +1629,38 @@ function PlayPageClient() {
     }
   };
 
+  // 文档全屏（手机「强制横屏」走的是 html.requestFullscreen，不是播放器 fullscreen）
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const syncDocFs = () => {
+      const fs = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement
+      );
+      setIsDocFullscreen(fs);
+      if (fs) {
+        setPlayMoreOpen(false);
+        setCoupleOpen(false);
+      }
+    };
+    const mq = window.matchMedia('(max-width: 767px)');
+    const syncMobile = () => setIsMobileViewport(mq.matches);
+    syncDocFs();
+    syncMobile();
+    document.addEventListener('fullscreenchange', syncDocFs);
+    document.addEventListener('webkitfullscreenchange', syncDocFs as EventListener);
+    mq.addEventListener?.('change', syncMobile);
+    return () => {
+      document.removeEventListener('fullscreenchange', syncDocFs);
+      document.removeEventListener(
+        'webkitfullscreenchange',
+        syncDocFs as EventListener
+      );
+      mq.removeEventListener?.('change', syncMobile);
+    };
+  }, []);
+
   // 进入/退出全屏时锁定/解锁横屏（保持原有逻辑）
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -2010,7 +2055,7 @@ function PlayPageClient() {
           }
         />
       )}
-      {showSkipIntro && !upNextOpen && !isFullscreen && (
+      {showSkipIntro && !upNextOpen && !hideChromeOverlays && (
         <div className='absolute top-20 right-4 z-[75] flex flex-col items-end gap-2'>
           <button
             type='button'
@@ -2029,7 +2074,7 @@ function PlayPageClient() {
           </button>
         </div>
       )}
-      {showMarkOutro && !showSkipIntro && !upNextOpen && !isFullscreen && (
+      {showMarkOutro && !showSkipIntro && !upNextOpen && !hideChromeOverlays && (
         <div className='absolute top-20 right-4 z-[75] flex flex-col items-end gap-2'>
           <button
             type='button'
@@ -2042,7 +2087,7 @@ function PlayPageClient() {
           </button>
         </div>
       )}
-      {!upNextOpen && !isFullscreen && (
+      {!upNextOpen && !hideChromeOverlays && (
         <div className='absolute top-20 left-4 z-[75] flex flex-col items-start gap-2 max-w-[min(90vw,16rem)]'>
           <button
             type='button'
@@ -2194,7 +2239,7 @@ function PlayPageClient() {
         outroStartSec={outroStartSec}
         duration={mediaDuration}
         visible={
-          !isFullscreen &&
+          !hideChromeOverlays &&
           !upNextOpen &&
           (introEndSec > 5 || !!outroStartSec)
         }
@@ -2386,7 +2431,7 @@ function PlayPageClient() {
             }
           }}
         />
-        {!isFullscreen && (
+        {!hideChromeOverlays && (
           <button
             type='button'
             onClick={() => setCoupleOpen((v) => !v)}
