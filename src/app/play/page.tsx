@@ -1611,14 +1611,27 @@ function PlayPageClient() {
     };
   }, []);
 
-  // 用户点击悬浮按钮 -> 请求全屏并锁定横屏
+  // 用户点击悬浮按钮 / 全屏：优先播放器全屏，再锁横屏
   const handleForceLandscape = async () => {
     try {
-      const el: any = document.documentElement;
-      if (el.requestFullscreen) {
-        await el.requestFullscreen();
-      } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
+      const player: any = playerRef.current;
+      if (player?.enterFullscreen) {
+        try {
+          await player.enterFullscreen();
+        } catch {
+          /* fall through to document FS */
+        }
+      }
+      if (
+        !document.fullscreenElement &&
+        !(document as any).webkitFullscreenElement
+      ) {
+        const el: any = player?.el || document.documentElement;
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        }
       }
 
       if (screen.orientation && (screen.orientation as any).lock) {
@@ -1991,15 +2004,28 @@ function PlayPageClient() {
         </div>
       )}
 
-      {/* 强制横屏按钮：仅在移动端竖屏时显示 */}
+      {/* 强制横屏：竖屏时放右下角大按钮，躲开底部手势条 */}
       {isPortrait && (
         <button
+          type='button'
           onClick={handleForceLandscape}
-          className='fixed bottom-16 left-4 z-[85] w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center md:hidden'
+          className='fixed z-[120] md:hidden flex items-center gap-1.5 rounded-full bg-teal-600 text-white font-semibold text-sm px-4 py-3 shadow-lg shadow-black/40 active:scale-95'
+          style={{
+            right: 'max(1rem, env(safe-area-inset-right))',
+            bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))',
+          }}
+          title='全屏横屏观看'
         >
-          <svg className='w-5 h-5' viewBox='0 0 1024 1024' fill='currentColor'>
-            <path d='M298.666667 469.333333h597.333333c46.933333 0 85.333333 38.4 85.333333 85.333334v341.333333c0 46.933333-38.4 85.333333-85.333333 85.333333H298.666667c-46.933333 0-85.333333-38.4-85.333334-85.333333v-341.333333c0-46.933333 38.4-85.333333 85.333334-85.333334z m0 85.333334v341.333333h597.333333v-341.333333H298.666667z m170.666666-512c46.933333 0 85.333333 38.4 85.333334 85.333333v298.666667h-85.333334V128H128v597.333333h42.666667v85.333334H128c-46.933333 0-85.333333-38.4-85.333333-85.333334V128c0-46.933333 38.4-85.333333 85.333333-85.333333h341.333333z m115.2 42.666666c128 0 238.933333 89.6 268.8 213.333334v4.266666l46.933334-51.2L951.466667 298.666667 853.333333 396.8c-17.066667 21.333333-51.2 8.533333-55.466666-17.066667V366.933333c0-115.2-89.6-213.333333-204.8-217.6h-8.533334V85.333333z' />
+          <svg className='w-5 h-5' viewBox='0 0 24 24' fill='none' aria-hidden>
+            <path
+              d='M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+            />
           </svg>
+          横屏
         </button>
       )}
 
@@ -2247,8 +2273,9 @@ function PlayPageClient() {
       {/* 双击左右跳 · 长按 2×（不挡中间控件） */}
       {!upNextOpen && !!videoUrl && (
         <>
+          {/* 底部留给控制栏 / 全屏按钮，避免右下角点不到 */}
           <div
-            className='absolute inset-y-0 left-0 w-[28%] z-[40] md:hidden'
+            className='absolute top-0 bottom-24 left-0 w-[28%] z-[40] md:hidden'
             onDoubleClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2289,7 +2316,7 @@ function PlayPageClient() {
             }}
           />
           <div
-            className='absolute inset-y-0 right-0 w-[28%] z-[40] md:hidden'
+            className='absolute top-0 bottom-24 right-0 w-[28%] z-[40] md:hidden'
             onDoubleClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2522,11 +2549,39 @@ function PlayPageClient() {
                   <AdBlockIcon enabled={blockAdEnabled} />
                 </button>
                 <PlaybackRateButton playerRef={playerRef} />
-                <PictureInPictureButton playerRef={playerRef} />
-                {/* 自定义 AirPlay 按钮 */}
-                <AirPlayButton className='vds-button'>
-                  <AirPlayIcon className='vds-icon' />
-                </AirPlayButton>
+                {/* 手机端藏画中画 / AirPlay，给全屏按钮留触控空间 */}
+                <span className='hidden sm:contents'>
+                  <PictureInPictureButton playerRef={playerRef} />
+                  <AirPlayButton className='vds-button'>
+                    <AirPlayIcon className='vds-icon' />
+                  </AirPlayButton>
+                </span>
+                {/* 手机：显式横屏入口，避免右下角全屏被挡 */}
+                <button
+                  type='button'
+                  className='vds-button sm:hidden'
+                  aria-label='横屏全屏'
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    void handleForceLandscape();
+                  }}
+                >
+                  <svg
+                    className='vds-icon'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <path
+                      d='M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4'
+                      stroke='currentColor'
+                      strokeWidth='2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                </button>
               </>
             ),
             // 快退 10 秒按钮（根据播放器尺寸决定显隐）
