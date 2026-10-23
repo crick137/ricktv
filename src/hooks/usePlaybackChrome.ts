@@ -73,7 +73,7 @@ export function usePlaybackChrome(opts: {
     }
     const ms = navigator.mediaSession;
     const epLabel =
-      totalEpisodes > 1 ? `第 ${episodeIndex + 1} 集` : "Rick's Nest";
+      totalEpisodes > 1 ? `第 ${episodeIndex + 1} 集` : 'ricktv';
 
     try {
       const artwork = cover
@@ -85,7 +85,7 @@ export function usePlaybackChrome(opts: {
       ms.metadata = new MediaMetadata({
         title: title || '播放中',
         artist: epLabel,
-        album: "Rick's Nest",
+        album: 'ricktv',
         artwork,
       });
     } catch {

@@ -65,7 +65,7 @@ export default function AuthProvider({ children }: Props) {
           <ThemeToggle />
         </div>
         <div className='relative z-10 w-full max-w-md rounded-3xl rt-glass p-8 sm:p-10 shadow-xl shadow-slate-900/10'>
-          <p className='rt-eyebrow text-center mb-2'>nest</p>
+          <p className='rt-eyebrow text-center mb-2'>ricktv</p>
           <h1 className='font-display text-teal-700 dark:text-teal-300 tracking-tight text-center text-3xl font-bold mb-8'>
             {siteName}
           </h1>

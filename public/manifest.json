@@ -1,34 +1,23 @@
 {
-  "name": "Rick's Nest",
-  "short_name": "RickNest",
-  "description": "Rick's Nest · 小窝里的影视聚合",
+  "name": "ricktv",
+  "short_name": "ricktv",
+  "description": "ricktv · 影视聚合播放器",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#22d3ee",
-  "apple-mobile-web-app-capable": "yes",
-  "apple-mobile-web-app-status-bar-style": "black",
+  "background_color": "#0f172a",
+  "theme_color": "#0d9488",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-256x256.png",
-      "sizes": "256x256",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

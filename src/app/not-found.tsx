@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className='min-h-[70vh] flex flex-col items-center justify-center px-6 text-center'>
       <p className='rt-eyebrow mb-3'>404</p>
       <h1 className='font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50 mb-3'>
-        这页不在 Nest 里
+        这页不在 ricktv 里
       </h1>
       <p className='text-sm text-slate-500 dark:text-slate-400 mb-8 max-w-sm'>
         链接可能失效了，或者内容已经下架。回首页继续逛，或直接搜索片名。

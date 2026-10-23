@@ -138,9 +138,9 @@ function HomeClient() {
     <PageLayout>
       <div className='rt-grain px-2 sm:px-10 py-5 sm:py-9 overflow-visible'>
         <div className='mb-7 sm:mb-10 flex flex-col items-center gap-3 rt-soft-in'>
-          <p className='rt-eyebrow hidden sm:block'>welcome home</p>
+          <p className='rt-eyebrow hidden sm:block'>welcome</p>
           <h1 className='font-display text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 text-center'>
-            Rick&apos;s Nest
+            ricktv
           </h1>
           <CapsuleSwitch
             options={[

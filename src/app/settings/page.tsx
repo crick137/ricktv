@@ -107,7 +107,7 @@ function SettingsClient() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ricks-nest-export-${Date.now()}.json`;
+    a.download = `ricktv-export-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     flash('已导出本机数据');

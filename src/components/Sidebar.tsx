@@ -170,10 +170,10 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   }));
 
   const { siteName } = useSite();
-  if (siteName !== "Rick's Nest" && siteName !== 'ricktv1') {
+  if (siteName !== 'ricktv' && siteName !== 'ricktv1') {
     menuItems.push({
       icon: Github,
-      label: "Rick's Nest",
+      label: 'ricktv',
       href: 'https://github.com/crick137/ricktv',
     });
   }

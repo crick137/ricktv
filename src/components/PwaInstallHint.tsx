@@ -43,7 +43,7 @@ export default function PwaInstallHint() {
       <div className='rt-glass rounded-2xl border border-teal-500/30 px-4 py-3 shadow-lg flex items-center gap-3'>
         <div className='min-w-0 flex-1'>
           <p className='text-sm font-medium text-slate-800 dark:text-slate-100'>
-            安装 Rick&apos;s Nest
+            安装 ricktv
           </p>
           <p className='text-xs text-slate-500'>主屏幕打开 · 更像 App</p>
         </div>

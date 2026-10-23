@@ -24,8 +24,8 @@ const body = Noto_Sans_SC({
 });
 
 export const metadata: Metadata = {
-  title: process.env.SITE_NAME || "Rick's Nest",
-  description: "Rick's Nest · 小窝里的影视聚合",
+  title: process.env.SITE_NAME || 'ricktv',
+  description: 'ricktv · 影视聚合播放器',
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -51,7 +51,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const siteName = process.env.SITE_NAME || "Rick's Nest";
+  const siteName = process.env.SITE_NAME || 'ricktv';
   const announcement =
     process.env.ANNOUNCEMENT ||
     '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。';
